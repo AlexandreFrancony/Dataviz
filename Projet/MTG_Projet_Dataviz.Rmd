@@ -16,16 +16,16 @@ knitr::opts_chunk$set(echo = TRUE)
 Delete any line that has a cardSet in Unstable, Unhinged, Unglued, Unsanctioned or Unfinity (these editions are irrelevant in our case), then write the new dataset in a new csv file.
 **(ONLY ONCE!)**
 ```{r}
-#MTGcsv <- read.csv("./MTG_data/MTGcards.csv")
-#mtg_data <- as.data.frame(MTGcsv)
+MTGcsv <- read.csv("./MTG_data/MTGcards.csv")
+mtg_data <- as.data.frame(MTGcsv)
 
-#mtg_data <- mtg_data[mtg_data$cardSet != "Unstable",]
-#mtg_data <- mtg_data[mtg_data$cardSet != "Unhinged",]
-#mtg_data <- mtg_data[mtg_data$cardSet != "Unglued",]
-#mtg_data <- mtg_data[mtg_data$cardSet != "Unsanctioned",]
-#mtg_data <- mtg_data[mtg_data$cardSet != "Unfinity",]
+mtg_data <- mtg_data[mtg_data$cardSet != "Unstable",]
+mtg_data <- mtg_data[mtg_data$cardSet != "Unhinged",]
+mtg_data <- mtg_data[mtg_data$cardSet != "Unglued",]
+mtg_data <- mtg_data[mtg_data$cardSet != "Unsanctioned",]
+mtg_data <- mtg_data[mtg_data$cardSet != "Unfinity",]
 
-#write.csv(mtg_data, file = "./MTG_data/MTGcards_clean.csv")
+write.csv(mtg_data, file = "./MTG_data/MTGcards_clean.csv")
 ```
 
 ## Importing the cleaned data
