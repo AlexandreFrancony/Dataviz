@@ -5,7 +5,7 @@ library(shiny)
 library(ggplot2)
 library(rsconnect)
 
-# rsconnect::deployApp(appDir = "C:/Users/alexa/Downloads/Git/Dataviz/TPs/TP5/DashIrisTP5", appName = "DashIrisTP5")
+# rsconnect::deployApp('C:/Users/Alex/Downloads/Git/Dataviz/TPs/TP5/DashIrisTP5')
 
 
 # Charger le fichier iris.data
