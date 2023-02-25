@@ -1,0 +1,230 @@
+---
+title: "CH2 : Visualisation des donnees Temporelles"
+subtitle: " TP2"
+author: Nom Prenom
+output: 
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, warning = FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+# Charger les librairies:
+library(ggplot2)
+library(dplyr)
+library(forcats)
+library(plotly)
+library(tidyr)
+library(stringr)
+```
+
+
+# Exercice 1
+## Question 1
+
+Charger les donnees `covid_country.csv`. Utiliser la fonction `head` pour afficher un echantillon de donnees. Utiliser la fonction `colnames` pour afficher les noms des colonnes.  Utiliser la fonction `str` pour afficher la structure interne des donnees. Utiliser la fonction `summarise_all(~sum(is.na(.)))` pour verfier qu'il n'y a pas des donnees manquantes par colonne
+
+
+```{r }
+# Charges les donnees:
+covid_country <- read.csv("data/covid_country.csv", header = TRUE, sep = ",")
+```
+
+```{r }
+# Afficher un echantillon de donnees : 
+head(covid_country)
+```
+
+
+```{r }
+# Afficher les noms des colonnes : 
+colnames(covid_country)
+```
+
+```{r }
+#Afficher la structure interne des donnees:
+str(covid_country)
+```
+
+
+```{r }
+# Afficher le nombre des informations manquantes par colonne:
+colSums(is.na(covid_country))
+```
+ 
+## Question 2
+
+Visualiser avec `Line chart` l'evolution mondiale du nombre cumule des cas. 
+
+```{r fig.align="center",fig.width = 10, fig.height = 10}
+#Evolution mondiale du nombre cumulé des cas confirmés.
+covid_country%>%group_by(date)%>%summarise(confirmed=sum(confirmed))%>%mutate(date = as.Date(date))%>%ggplot(aes(x = date, y = confirmed)) + 
+  geom_line(color = "blue") + 
+  labs(title = "Evolution mondiale du nombre cumule des cas confirmes", x = "Date", y = "Nombre de cas confirmes")
+```
+
+```{r fig.align="center",fig.width = 10, fig.height = 10}
+#Evolution mondiale du nombre cumulé des décès
+covid_country%>%group_by(date)%>%summarise(deaths=sum(deaths))%>%mutate(date = as.Date(date))%>%ggplot(aes(x = date, y = deaths)) + 
+  geom_line(color = "blue") + 
+  labs(title = "Evolution mondiale du nombre cumule de morts", x = "Date", y = "Nombre de morts")
+```
+
+
+## Question 3
+
+Visualiser avec `Line chart` l'evolution des cas confirmes par semaine en `France` 
+
+```{r fig.align="center",fig.width = 10, fig.height = 5}
+# evolution de cas confirme par semaine en France
+covid_country %>% filter(Country == "France")%>%mutate(date = as.Date(date))%>%ggplot(aes(x = date, y = confirmed.per.week)) + 
+  geom_line(color = "blue") + 
+  labs(title = "Evolution de cas confirme par semaine en France", x = "Date", y = "Nombre de cas confirmes")
+```
+
+## Question 4
+
+Visualiser avec `Multiple Line Chart` l'evolution des cas confirmes par semaine en `France`, `Germany` et `Italy`.
+Visualiser avec `Multiple Line Chart` l'evolution des deces par semaine en `France`, `Germany` et `Italy`.
+
+
+```{r fig.align="center",fig.width = 10, fig.height = 5}
+# Evolution de cas confirme par semaine en France, Germany et Italy
+covid_country %>% filter(Country %in% c("France", "Germany", "Italy"))%>%mutate(date = as.Date(date))%>%ggplot(aes(x = date, y = confirmed.per.week, color = Country)) + 
+  geom_line() + 
+  labs(title = "Evolution de cas confirme par semaine en France, Germany et Italy", x = "Date", y = "Nombre de cas confirmes")
+```
+
+```{r fig.align="center",fig.width = 10, fig.height = 5}
+# Evolution des deces par semaine en France, Germany et Italy
+covid_country %>% filter(Country %in% c("France", "Germany", "Italy"))%>%mutate(date = as.Date(date))%>%ggplot(aes(x = date, y = deaths.per.week, color = Country)) + 
+  geom_line() + 
+  labs(title = "Evolution des deces par semaine en France, Germany et Italy", x = "Date", y = "Nombre de deces")
+```
+
+## Question 5
+
+Visualiser avec `geom_area` l'evolution des cas confirmes par semaine en `France`, `Germany` et `Italy`.
+Visualiser avec `geom_area` l'evolution des deces par semaine en `France`, `Germany` et `Italy`.  Utiliser la focntion ggplotly pour creer des graphiques interactifs
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# Evolution de cas confirme par semaine en France, Germany et Italy
+covid_country %>% 
+  filter(Country %in% c("France", "Germany", "Italy"))%>%
+  mutate(date = as.Date(date))%>%
+  ggplot(aes(x = date, y = confirmed.per.week, color = Country)) + 
+  geom_area() + 
+  labs(title = "Evolution de cas confirmés par semaine en France, Germany et Italy", x = "Date", y = "Nombre de cas confirmés")
+```
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# graphique interactif grace à plotly
+covid_country %>% 
+  filter(Country %in% c("France", "Germany", "Italy"))%>%
+  mutate(date = as.Date(date))%>%
+  ggplot(aes(x = date, y = confirmed.per.week, color = Country)) + 
+  geom_area() + 
+  labs(title = "Evolution de cas confirmés par semaine en France, Germany et Italy", x = "Date", y = "Nombre de cas confirmés")
+ggplotly()
+```
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# Evolution de cas confirme par semaine en France, Germany et Italy
+covid_country %>% filter(Country %in% c("France", "Germany", "Italy"))%>%mutate(date = as.Date(date))%>%ggplot(aes(x = date, y = deaths.per.week, color = Country)) + 
+  geom_area() + 
+  labs(title = "Evolution de cas confirme par semaine en France, Germany et Italy", x = "Date", y = "Nombre de cas confirmes")
+```
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# graphique interactif
+covid_country %>% 
+  filter(Country %in% c("France", "Germany", "Italy"))%>%
+  mutate(date = as.Date(date))%>%
+  ggplot(aes(x = date, y = deaths.per.week, color = Country)) + 
+  geom_area() + 
+  labs(title = "Evolution de cas confirmés par semaine en France, Germany et Italy", x = "Date", y = "Nombre de décès")
+ggplotly()
+```
+
+# Exercice 2
+
+
+## Question 1 
+
+Charger les donnees `data_que_faire_a_paris.csv`. Utiliser la fonction `head` pour afficher un echantillon de donnees. Utiliser la fonction `colnames` pour afficher les noms des colonnes.  Utiliser la fonction `str` pour afficher la structure interne des donnees. 
+
+
+```{r }
+# Charges les donnees: 
+paris <- read.csv("data/data_que_faire_a_paris.csv", sep = ",", header = TRUE, stringsAsFactors = FALSE)
+```
+
+```{r }
+# Afficher un echantillon de donnees : 
+head(paris)
+```
+
+```{r }
+# Afficher les noms des colonnes : 
+colnames(paris)
+```
+
+```{r }
+#Aficher la structure interne des donnees:
+str(paris)
+```
+
+## Question 2
+
+Utiliser la fonction `summarise_all(~sum(is.na(.)))` pour afficher le nombre de donnees manquantes par colonne. Utiliser la fonction `drop_na` pour supprimer tous les evenements avec des donnees manquantes et verifier a nouveau le nombre de donnees manquantes par colonne 
+
+```{r }
+# Aficher le nombre des informations manquantes par colonne:
+colSums(is.na(paris))
+```
+
+```{r }
+# supprimer les evenements avec une information manquante et verfier le nombre des informations manquantes 
+paris <- paris %>% drop_na()
+colSums(is.na(paris))
+```
+
+## Question 3
+
+Utiliser la fonction `mutate` , `str_split`  et `as.Date`  pour transformer les `Date.de.debut` et `Date.de.fin` en format  `annees-mois-jour` et en type `Date`
+
+```{r }
+
+# Transformer les Date.de.debut et Date.de.fin en format  annees-mois-jour et en type Date
+# Exemple d'utilisation de str_plit : str_split("2022-10-09T12:00:00+02:00", "T", simplify = TRUE)[, 1] retourne "2022-10-09"
+paris <- paris %>% mutate(Date.de.debut = as.Date(str_split(Date.de.debut, "T", simplify = TRUE)[, 1]), Date.de.fin = as.Date(str_split(Date.de.fin, "T", simplify = TRUE)[, 1]))
+```
+
+## Question 4
+
+Utiliser les fonctions `mutate`, `filter`, `select`, `gather`, `difftime`, `geom_line`, `geom_hline` , `coord_flip` et `scale_y_date` pour visualiser un `Gantt Chart` des evenements a `Paris` de type `Theatre`  qui se deroulent (du debut a la fin) en `octobre 2022` et dont la duree `>2 jours`, et ceci par type de `audiance`.  Ajouter une ligne verticale indiquant la date de `14 octobre 2022`. 
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+paris %>%
+  mutate(Type = as.factor(Type),
+  date_debut = as.Date(Date.de.debut, format = "%Y-%m-%d"),
+  date_fin = as.Date(Date.de.fin, format = "%Y-%m-%d")) %>%
+  filter(Type == "Theatre",
+  grepl("2022-10", Date.de.debut),
+  difftime(date_fin, date_debut) > 2) %>%
+  select(Nom.du.lieu, date_debut, date_fin) %>%
+  gather(key = "start_or_end", value = "date", date_debut, date_fin) %>%
+  ggplot(aes(x = date, y = Nom.du.lieu, color = start_or_end, group = Nom.du.lieu)) +
+  geom_line() +
+  geom_hline(yintercept = 0, color = "gray50", size = 0.5) +
+  coord_flip() +
+  scale_x_date(date_breaks = "2 day", date_labels = "%d") +
+  scale_y_discrete(limits = rev(levels(paris$Nom.du.lieu))) +
+  geom_vline(xintercept = as.numeric(as.Date("2022-10-14")), color = "red", size = 0.5) +
+  labs(x = "Date", y = "Nom du lieu") +
+  ggtitle("Gantt Chart des événements de théâtre à Paris en octobre 2022")
+```

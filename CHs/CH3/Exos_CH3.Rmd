@@ -1,0 +1,690 @@
+---
+title: "CH3 : Visualisation des donnees spatiales"
+subtitle: " Exos"
+author: Nom Prenom
+output: 
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+
+```{r setup, warning = FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercice 1
+
+Structuration et gestion des donnees geographiques avec R
+
+## Question 1 
+
+Charger les librairies  `maptiles`, `leaflet`,  `cartography`, `sf`, `mapsf`, `tidyr`, `dplyr` et `ggplot2`
+
+```{r message = FALSE, warning = FALSE}
+
+library(maptiles)  # Afficher des fonds de carte
+library(leaflet) # Cartographie interactive
+library(cartography) # Cartographie
+
+library(sf) # Gestion de donnees spatiales + geotraitement
+library(mapsf) # Cartographie
+library(tidyr) # Gestion de donnees 
+library(dplyr) # Gestion de donnees 
+library(ggplot2) # Representation graphique
+
+```
+
+
+
+## Question 2 
+
+Charger les donnees spatiales du decoupage administratif francais au niveau `communal` et `departemental`. Eliminer les departements d'Outre-mer (971 ,972 ,976 ,974 ,973). 
+
+```{r warning = FALSE}
+# Contours des communes francaises 
+
+com_fr <- st_read("data/ADMIN-EXPRESS/COMMUNE.shp", quiet=TRUE)
+
+#com_fr <- st_read(dsn="dataset/ADMIN-EXPRESS",  layer="COMMUNE")
+
+# Contours des departements francais 
+
+dep_fr <- st_read("data/ADMIN-EXPRESS/DEPARTEMENT.shp", quiet=TRUE)
+# ou 
+#dep_fr <- st_read(dsn="dataset/ADMIN-EXPRESS",  layer="DEPARTEMENT")
+
+
+```
+
+
+```{r }
+# Eliminer les departements d'Outre-mer (971 ,972 ,976 ,974 ,973). 
+dep_fr = dep_fr%>%filter(! INSEE_DEP%in%c("971" ,"972" ,"976" ,"974" ,"973"))
+com_fr = com_fr%>%filter(! INSEE_DEP%in%c("971" ,"972" ,"976" ,"974" ,"973"))
+```
+
+## Question 3 
+
+Utiliser la fonction `plot` pour visualiser les variables du decoupage departemental. 
+
+```{r }
+plot(dep_fr)
+```
+
+## Question 4 
+
+Utiliser les fonctions `plot` et  `st_geometry` pour visualiser uniquement la geometrie du decoupage departemental. 
+
+```{r }
+plot(st_geometry(dep_fr))
+```
+
+## Question 5
+
+Utiliser la focntion `ggplot` et `geom_sf` pour visualiser uniquement la geometrie du decoupage departemental.
+
+```{r }
+ggplot() + geom_sf(data = dep_fr)
+```
+
+## Question 6 
+
+Utiliser les fonctions `filter` et `plot` pour filtrer et visualiser la region de l'ile de france (11)
+
+```{r }
+IF <- dep_fr%>%filter(INSEE_REG== "11" )
+
+plot(st_geometry(IF))
+```
+
+
+## Question 7
+
+Utiliser la fonction `st_union`  pour fusionner les geometries des departements et visualiser le resultat
+
+```{r }
+# Agreger des polygones
+
+dep_fr_ile_de_france <- st_union(dep_fr_ile_de_france)
+
+plot(dep_fr_ile_de_france)
+```
+
+## Question 8
+
+Utiliser la fonction `st_union`  pour fusionner les geometries des departements par region et visualiser les contours des departements et des regions 
+
+```{r }
+fr_reg <- dep_fr%>%group_by(INSEE_REG)%>% 
+                 summarize(geometry = st_union(geometry))
+
+plot(st_geometry(dep_fr), col = "lightblue")
+plot(st_geometry(fr_reg), add = TRUE, lwd = 2, border = "red")
+```
+
+## Question 9
+
+Utiliser la fonction `st_centroid`  pour extraire les centroides des regions Visualiser le resultat
+
+```{r }
+# Extraire des centroides
+
+fr_reg_c <- st_centroid(fr_reg)
+
+# Visualiser les centroides sur la carte departementale
+
+plot(st_geometry(fr_reg), col = "lightblue")
+plot(st_geometry(fr_reg_c), add = TRUE, cex = 1.2, col = "red", pch = 20)
+
+```
+
+## Question 10
+
+Utiliser la fonction `st_centroid`  et `st_buffer` pour creer une zone tampon autour du centroid de l'ile de france. Visualiser le resultat
+
+
+```{r }
+zone_if <- st_geometry(fr_reg%>%filter(INSEE_REG=="11"))%>%st_centroid()%>%st_buffer(100000)
+
+plot(st_geometry(dep_fr))
+plot(zone_if, border = "red", lwd = 2, add = TRUE)
+```
+
+
+## Question 11
+
+Utiliser la fonction `st_intersection`  pour extraire la zone tampon autour du centroid de l'ile de france. Visualiser le resultat seul puis avec la carte departementale
+
+```{r }
+zoom_if <- st_intersection(x = dep_fr, y = zone_if)
+plot(st_geometry(dep_fr))
+plot(st_geometry(zoom_if), col="red", border="green", add=T)
+```
+
+
+```{r }
+# Visualiser la zone tampon avec la carte departementale
+
+plot(st_geometry(zoom_if))
+```
+
+
+## Question 12
+
+Ajouter un fond de carte a la visulaisation de la region ile de france (Question 6)
+
+```{r }
+osm_tiles <- get_tiles(x = IF, zoom = 10, crop = TRUE)
+
+plot_tiles(osm_tiles)
+plot(st_geometry(IF), border = "grey20", lwd = .7, add = TRUE)
+```
+
+## Question 13
+
+Utiliser la fonction `leaflet` pour visualiser la region ile de france sur une carte interactive
+
+
+```{r }
+leaflet(IF) %>%
+               addTiles()%>%
+               addPolygons()
+```
+
+
+## Question 14
+
+Utiliser les fonctions `leaflet` et `addMarkers` pour visualiser la region ile de france et les centroides des departements sur une carte interactive
+
+
+```{r }
+if_c <- st_centroid(IF)
+
+leaflet(IF) %>%
+               addTiles()%>%
+               addPolygons()%>%
+               addMarkers(data = if_c)
+```
+
+
+## Question 15
+
+Utiliser les fonctions `st_as_sf` et `st_set_crs` pour transformer votre position GPS en sf. Utiliser les fonctions `leaflet` et `addMarkers` pour visualiser la region ile de france et votre position sur une carte interactive
+
+
+```{r }
+gps_devinci<-data.frame(lon=2.236925,lat=48.896272) %>% 
+             st_as_sf(coords = c("lon", "lat")) %>% 
+             st_set_crs(4326)
+
+leaflet(IF) %>%
+  addTiles() %>%
+  addPolygons() %>%
+  addMarkers(data = gps_devinci)
+```
+
+# Exercice 2 
+
+Visualisation des resultats du second tour de l'election presidentielle 2022
+
+![](data/macronlepen.jpg)
+
+## Question 1
+
+Telecharger les resultas par departement du second tour de l'election presidentielle 2022.  Utiliser la fonction `inner_join` pour fusionner le decoupage et les resultas par departement
+
+
+```{r warning = FALSE}
+
+elec_fr_t2_dep <- read.csv("data/resultats-par-niveau-dpt-t2-france-entiere.csv")
+
+```
+
+
+```{r }
+# Fusionner les resultats et le decoupage departemental
+dep_fr_elc <- dep_fr%>%inner_join(elec_fr_t2_dep , by="INSEE_DEP")
+```
+
+
+## Question 2
+
+Utiliser la fonction `mutate` pour creer une variable `Perc_EM` qui contient le pourcentage de votes pour Macron. Utiliser `mf_map` de type `chro` pour visualiser le pourcentage de votes pour Macron par departement.  
+
+
+```{r }
+dep_fr_elc_t2 <- dep_fr_elc%>%mutate(Perc_EM = MACRON / (Votants-Blancs) *100)
+mf_theme(bg = "white",
+         fg = "blue",
+         line = 2,
+         cex = 2,  
+         font = 4,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+
+# Tracer l'ombre de la carte
+
+mf_shadow(dep_fr_elc_t2) 
+
+# Carte choroplethe
+
+mf_map(x = dep_fr_elc_t2,
+       var = "Perc_EM",
+       type = "choro",
+       nbreaks=10,
+       breaks = "quantile",
+       border= "white",
+       pal = rev(mf_get_pal(n = 17, pal = "Orange"))[-c(0,1,2,3,15,16,17)],
+       lwd = 0.5,
+       leg_pos = 'topleft',
+       leg_title  = "Pourcentages de vote pour MACRON (%)",
+       leg_title_cex = 1,
+       leg_val_cex = 1,
+       leg_val_rnd = 0,
+       add= TRUE)
+
+mf_layout("Second tour de l'election presidentielle, 2022",
+          credits = "Kheriji  Walid\nSources: INSEE & IGN, 2022", arrow  = FALSE)
+
+mf_arrow(pos = "topright")
+
+# Position de la France sur une carte du monde
+
+mf_inset_on(x = "worldmap", pos = "right")
+mf_worldmap(dep_fr_elc_t2, col = "#0E3F5C")
+mf_inset_off()
+```
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+
+# Definir un theme de la carte
+
+mf_theme(bg = "white",
+         fg = "blue",
+         line = 2,
+         cex = 2,  
+         font = 4,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+
+# Tracer l'ombre de la carte
+
+mf_shadow(dep_fr_elc_t2)
+
+# Carte choroplethe
+
+mf_map(x = dep_fr_elc_t2,
+       var = "Perc_EM",
+       type = "choro",
+       nbreaks=10,
+       breaks = "quantile",
+       border= "white",
+       pal = rev(mf_get_pal(n = 17, pal = "Orange"))[-c(0,1,2,3,15,16,17)],
+       lwd = 0.5,
+       leg_pos = 'topleft',
+       leg_title  = "Pourcentages de vote pour MACRON (%)",
+       leg_title_cex = 1,
+       leg_val_cex = 1,
+       leg_val_rnd = 0,
+       add= TRUE)
+
+# Position de la France sur une carte du monde
+
+mf_inset_on(x = "worldmap", pos = "right")
+mf_worldmap(dep_fr_elc_t2, col = "#0E3F5C")
+mf_inset_off()
+```
+
+## Question 3
+
+Utiliser `mf_map` de type `chro` pour visualiser le pourcentage de votes pour Macron par departement. Filtrer et mettre en evidence les resultas en Ile de France 
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+if_target <- dep_fr_elc_t2%>%filter(INSEE_REG == "11")
+
+zoom_paris <- if_target%>%filter(INSEE_DEP == "75")%>%st_centroid()%>%st_buffer(100000)
+mf_theme(bg = "white",
+        fg = "blue",
+        line = 2,
+        cex = 1.5,
+        font = 3,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+# Tracer l'ombre de la carte
+mf_shadow(dep_fr_elc_t2)
+# Carte choroplethe
+mf_map(x = dep_fr_elc_t2,
+       var = "Perc_EM",
+       type = "choro",
+       nbreaks=10,
+       breaks = "quantile",
+       border= "white",
+       pal = rev(mf_get_pal(n = 17, pal = "Orange"))[-c(0,1,2,3,15,16,17)],
+       lwd = 0.5,
+       leg_pos = "topleft", 
+       leg_title  = "Pourcentages de vote pour MACRON (%)",
+       leg_title_cex = 1,
+       leg_val_cex = 1,
+       leg_val_rnd = 0,
+       add= TRUE)
+plot(st_geometry(zoom_paris), border = "red", lwd = 2, add = TRUE)
+mf_layout("Second tour de l'election presidentielle, 2022",
+          credits = "Kheriji  Walid\nSources: INSEE & IGN, 2022",arrow = FALSE)
+
+mf_arrow(pos = "topright")
+
+# open the inset
+mf_inset_on(x = if_target, pos = "right",
+            cex = .3)
+# center on the target region
+mf_init(if_target)
+# display all departement
+mf_map(x = dep_fr_elc_t2,
+       var = "Perc_EM",
+       type = "choro",
+       nbreaks=10,
+       breaks = "quantile",
+       border= "white",
+       pal = rev(mf_get_pal(n = 17, pal = "Orange"))[-c(0,1,2,3,15,16,17)],
+       lwd = 0.5, leg_pos = NA, add = T)
+
+# Afficher les noms des departements
+mf_label(if_target, var = "NOM_DEP",
+         col = "black")
+
+mf_inset_off()
+```
+
+
+##  Question 4
+
+Telecharger les resultas par commune du second tour de l'election presidentielle 2022.  Utiliser la fonction `inner_join` pour fusionner le decoupage et les resultas par commune 
+
+
+```{r warning = FALSE}
+elec_fr_t2_com <- read.csv("data/resultats-par-niveau-com-t2-france-entiere.csv")
+com_fr_elc <- com_fr%>%inner_join(elec_fr_t2_com , by="INSEE_COM")
+```
+
+## Question 5
+
+Utiliser la fonction `mutate` pour creer une variable `Perc_EM` qui contient le pourcentage de votes pour Macron par commune. Utiliser `mf_map` de type `chro` pour visualiser le pourcentage de votes pour Macron par commune.  
+
+```{r }
+com_fr_elc_t2 <- com_fr_elc%>%mutate(Perc_EM = MACRON / (Votants-Blancs) *100)
+```
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+mf_theme(bg = "white",
+        fg = "blue",
+        line = 2,
+        cex = 1.5,
+        font = 3,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+
+mf_shadow(com_fr_elc_t2) 
+
+mf_map(x = com_fr_elc_t2,
+       var = "Perc_EM",
+       type = "choro",
+       nbreaks=10,
+       breaks = "quantile",
+       border= NA,
+       pal = rev(mf_get_pal(n = 17, pal = "Orange"))[-c(0,1,2,3,4,5,6)],
+       lwd = 0.5,
+       leg_pos = 'topright',
+       leg_title  = "Pourcentages de vote pour MACRON (%)",
+       leg_title_cex = 1,
+       leg_val_cex = 1,
+       leg_val_rnd = 0,
+       add= TRUE)
+
+mf_map(dep_fr_elc_t2, 
+       type = "base", 
+       col = NA,
+       border="white",
+       lwd=1,
+       add = TRUE)
+
+mf_layout("Second tour de l'election presidentielle, 2022",
+          credits = "Kheriji  Walid\nSources: INSEE & IGN, 2022")
+```
+
+## Question 6
+
+Utiliser la fonction `mutate` pour creer une variable `WIN` qui contient le candidat  en tete par departement. Utiliser `mf_map` de type `typo` pour visualiser le candidat  en tete par departement.
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+dep_fr_elc_t2_win <- dep_fr_elc_t2%>%
+                     mutate(WIN = ifelse( MACRON>LE.PEN, "MACRON", "LE PEN"))
+
+mf_theme(bg = "white",
+        fg = "blue",
+        line = 2,
+        cex = 1.5,
+        font = 3,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+
+
+
+mf_shadow(dep_fr_elc_t2_win) 
+mf_map(dep_fr_elc_t2_win,        
+       var = "WIN",
+       type = "typo",
+       pal = c("midnightblue","orange"),
+       border = "white",
+       leg_pos = 'topright',
+       leg_title  = "Candidat en tete",
+       leg_title_cex = 1,
+       leg_val_cex = 1,
+       add=T)
+
+mf_layout("Second tour de l'election presidentielle, 2022",
+          credits = "Kheriji  Walid\nSources: INSEE & IGN, 2022")
+```
+
+
+## Question 7
+
+Utiliser la fonction `mutate` pour creer une variable `WIN` qui contient le candidat  en tete par commune. Utiliser `mf_map` de type `typo` pour visualiser le candidat  en tete par commune. 
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+com_fr_elc_t2_win <- com_fr_elc_t2%>%
+                     mutate(WIN = ifelse( MACRON>LE.PEN, "MACRON", "LE PEN"))
+mf_theme(bg = "white",
+        fg = "blue",
+        line = 2,
+        cex = 1.5,
+        font = 3,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+
+mf_shadow(com_fr_elc_t2_win)
+
+mf_map(com_fr_elc_t2_win,        
+       var = "WIN",
+       type = "typo",
+       pal = c("midnightblue","orange"),
+       leg_pos = 'topright',
+       border = NA,
+       leg_title  = "Candidat en tete",
+       leg_title_cex = 1,
+       leg_val_cex = 1,
+       add = T )
+
+mf_map(dep_fr_elc_t2, 
+       type = "base", 
+       col = NA,
+       border="white",
+       lwd=1,
+       add = TRUE)
+
+mf_layout("Second tour de l'election presidentielle, 2022",
+          credits = "Kheriji  Walid\nSources: INSEE & IGN, 2022")
+```
+
+
+
+## Question 8
+
+Utiliser les fonctions `leaflet` et `addPolygons` pour visualiser le candidat en tete par departement sur une carte interactive
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+dep_fr_elc_t2_win$WIN <- factor(dep_fr_elc_t2_win$WIN, levels = c("MACRON", "LE PEN"))
+dep_factpal <- colorFactor(c("orange","midnightblue"),topo.colors(2), dep_fr_elc_t2_win$WIN)
+leaflet(dep_fr_elc_t2_win) %>%addTiles() %>%
+  addPolygons(fillOpacity = 0.8,
+              label = ~NOM_DEP,
+              color = "white",
+              fillColor  = ~dep_factpal(WIN),
+              highlightOptions = highlightOptions(color = "white", weight = 2))%>%
+              addLegend(
+              title = "Candidat en tete",
+              pal = dep_factpal, values = dep_fr_elc_t2_win$WIN)
+```
+
+
+
+
+
+## Question 9
+
+Utiliser `mf_map` de type `grad` pour visualiser les votes pour Macron par departement. 
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+mf_theme(bg = "white",
+        fg = "blue",
+        line = 2,
+        cex = 1.5,
+        font = 3,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+
+mf_map(dep_fr_elc_t2)
+mf_map(dep_fr_elc_t2,        
+       var = "MACRON",
+       type = "grad",
+       nbreaks=5,
+       breaks = "quantile",
+       border= "white",
+       lwd = 0.5,
+       col="orange",
+       leg_pos = 'topright',
+       leg_title  = "Vote pour MACRON",
+       leg_title_cex = 1,
+       leg_val_cex = 1,
+       leg_val_rnd = 0)
+
+mf_layout("Second tour de l'election presidentielle, 2022",
+          credits = "Kheriji  Walid\nSources: INSEE & IGN, 2022")
+```
+
+## Question 10
+
+Utiliser `mf_map` de type `prop` pour visualiser les votes pour Macron par departement. 
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+mf_theme(bg = "white",
+        fg = "blue",
+        line = 2,
+        cex = 1.5,
+        font = 3,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+
+mf_map(dep_fr_elc_t2)
+mf_map(dep_fr_elc_t2,        
+       var = "MACRON",
+       type = "prop",
+       col="orange",
+       leg_pos ="topright")
+
+mf_layout("Second tour de l'election presidentielle, 2022",
+          credits = "Kheriji  Walid\nSources: INSEE & IGN, 2022")
+```
+
+
+## Question 11
+
+Utiliser la fonction `mutate` pour creer une variable `WIN_Vote` qui contient nombre de votes pour le candidat en tete par departement. Utiliser `mf_map` de type `prop_typo` pour visualiser le candidat en tete par departement.
+
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+dep_fr_elc_t2_win_vote <- dep_fr_elc_t2_win%>%
+                     mutate(WIN_Vote = ifelse( WIN=="MACRON", MACRON, LE.PEN))
+mf_theme(bg = "white",
+        fg = "blue",
+        line = 2,
+        cex = 1.5,
+        font = 3,
+         mar = c(2, 2, 4, 2), 
+         pos= "center",
+         tab=FALSE)
+
+
+mf_shadow(dep_fr_elc_t2_win_vote)
+
+
+mf_map(
+  x = dep_fr_elc_t2_win_vote, 
+  var = c("WIN_Vote","WIN"), 
+  type = "prop_typo",
+  symbol = "square",
+  border = "white",
+  pal = c("orange", "midnightblue"),
+  lwd = .5,
+  leg_pos = c("right",  "topright"), 
+  leg_title = c("Vote", "Condidat en tete"),
+  add = T)
+
+mf_map(dep_fr_elc_t2, 
+       type = "base", 
+       col = NA,
+       border="white",
+       lwd=1,
+       add = TRUE)
+mf_layout("Second tour de l'election presidentielle, 2022",
+          credits = "Kheriji  Walid\nSources: INSEE & IGN, 2022")
+```
+
+
+## Question 12
+
+Utiliser la fonction `getGridLayer` pour creer des grilles regulieres hexagonales. Utiliser les fonctions `plot` et `choroLayer` pour visualiser les votes pour MACRON par grille.
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+
+
+
+```
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+
+
+
+```
+
+
+
+
+
+
+
+

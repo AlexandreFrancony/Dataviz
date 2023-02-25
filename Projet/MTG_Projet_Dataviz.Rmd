@@ -1,0 +1,47 @@
+---
+title: "MTG_Project_Dataviz"
+author: "Alexandre Francony"
+date: "2023-01-12"
+output: 
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Cleanning the data
+
+Delete any line that has a cardSet in Unstable, Unhinged, Unglued, Unsanctioned or Unfinity (these editions are irrelevant in our case), then write the new dataset in a new csv file.
+**(ONLY ONCE!)**
+```{r}
+#MTGcsv <- read.csv("./MTG_data/MTGcards.csv")
+#mtg_data <- as.data.frame(MTGcsv)
+
+#mtg_data <- mtg_data[mtg_data$cardSet != "Unstable",]
+#mtg_data <- mtg_data[mtg_data$cardSet != "Unhinged",]
+#mtg_data <- mtg_data[mtg_data$cardSet != "Unglued",]
+#mtg_data <- mtg_data[mtg_data$cardSet != "Unsanctioned",]
+#mtg_data <- mtg_data[mtg_data$cardSet != "Unfinity",]
+
+#write.csv(mtg_data, file = "./MTG_data/MTGcards_clean.csv")
+```
+
+## Importing the cleaned data
+
+Let's import the new csv file and create a new dataframe, then we can see the first 5 cards.
+```{r}
+mtg_data <- read.csv("./MTG_data/MTGcards_clean.csv")
+mtg_data <- as.data.frame(mtg_data)
+```
+
+Show an overview (summary) of the dataset
+```{r}
+summary(mtg_data)
+```
+
+Show an overview of the 5 first cards (cardName, cardType, manaCost, convertedMana, cardSet, rarity)
+```{r}
+mtg_data[1:5, c("cardName", "cardType", "manaCost", "convertedMana", "cardSet", "rarity")]
+```

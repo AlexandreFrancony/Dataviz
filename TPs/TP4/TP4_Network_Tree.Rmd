@@ -1,0 +1,148 @@
+---
+title: "CH4 : Visualisation des donnees reseaux et arbroscentes"
+subtitle: " TP4"
+author: Francony Alexandre
+output: 
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, warning = FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning = FALSE}
+library('igraph')
+library(dplyr)
+library(RColorBrewer)
+library("visNetwork")
+library("rpart")
+library(scales)
+library("rpart.plot")
+library("parttree")
+library(circlize)
+library(dendextend)
+library(colorspace)
+library(ggplot2)
+```
+
+# Question 1 
+
+Pour cette Question nous allons utiliser des pseudo donnees de reseaux social: quelques personnes se suivent, chacune a des followers et suit d'autres personnes. La force du lien est le nombre de followers en commum.
+
+Telecharger les noeuds et les aretes du reseau et explorer-le a l'aide de la visualisation  
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# Charger les données
+nodes <- read.csv("data/dataTP/rs_nodes.csv", header=TRUE)
+edges <- read.csv("data/dataTP/rs_edges.csv", header=TRUE)
+
+# Créer le graphique
+g <- graph_from_data_frame(edges, directed=TRUE, vertices=nodes)
+
+# Mettre en forme les noeuds et les arêtes
+V(g)$size <- log10(V(g)$followers)*5+5
+V(g)$color <- "#0072B2"
+V(g)$label.cex <- 1.2
+V(g)$label.color <- "#333333"
+V(g)$label.family <- "sans"
+E(g)$arrow.size <- 0.3
+E(g)$color <- "#888888"
+
+# Tracer le graphique
+plot(g, layout=layout_with_fr, vertex.label=V(g)$id)
+```
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# Charger les données
+nodes <- read.csv("data/dataTP/rs_nodes.csv", header=TRUE)
+edges <- read.csv("data/dataTP/rs_edges.csv", header=TRUE)
+
+g <- graph.data.frame(edges, directed = FALSE, vertices = nodes)
+
+# Définir la taille du noeud en fonction du nombre de followers
+node_size <- nodes$followers
+
+# Normaliser les tailles des noeuds pour qu'elles se situent dans une plage de valeurs raisonnables
+node_size <- rescale(node_size, to = c(5, 30))
+
+# Définir l'épaisseur du trait en fonction du nombre de followers en commun
+edge_size <- edges$sharedfollowers
+
+# Normaliser les tailles des traits pour qu'elles se situent dans une plage de valeurs raisonnables
+edge_size <- rescale(edge_size, to = c(1, 10))
+
+# Créer la visualisation en utilisant la fonction plot de igraph
+plot(g, vertex.size = node_size, edge.width = edge_size, 
+     vertex.label.color = "black", vertex.label.cex = 1.5)
+```
+  
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# Charger les données
+nodes <- read.csv("data/dataTP/rs_nodes.csv", header=TRUE)
+edges <- read.csv("data/dataTP/rs_edges.csv", header=TRUE)
+
+# création d'un graphe à partir des données
+g <- graph_from_data_frame(edges, directed=FALSE, vertices=nodes)
+
+# calcul de la taille des noeuds en fonction du nombre de followers
+node_size <- nodes$followers
+node_size <- rescale(node_size, to = c(5, 30))
+
+# calcul de l'épaisseur des arêtes en fonction du nombre de sharedfollowers
+edge_size <- edges$sharedfollowers
+edge_size <- rescale(edge_size, to = c(1, 10))
+
+# définition des couleurs des noeuds et des arêtes
+node_color <- "#1F77B4"
+edge_color <- "#999999"
+
+# création du graphique interactif avec visNetwork
+visIgraph(g) %>%
+  visNodes(size = node_size, color = node_color) %>%
+  visEdges(width = edge_size, color = edge_color) %>%
+  visPhysics(
+    minVelocity = 1,
+    solver = "repulsion",
+    repulsion = list(nodeDistance = 150, springLength = 150)
+  )
+```
+
+# Question 2
+
+Pour cette Question nous allons utiliser un jeu de donnees contient des mesures morphologiques pour trois especes de pingouins observees sur trois iles de l'archipel Palmer, en Antarctique.
+
+Ce jeu de donnees comprend 6 variables et 333 individus. La variable que nous cherchons a etudier ici est `species` . Les trois especes de pingouins observees sont:
+
+  * Adelie
+  * Gentoo
+  * Chinstrap
+
+![penguins](data/penguins.png)
+
+Telecharger les donnees penguins et explorer-leur leur hierarchie a l'aide de la visualisation  
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# Charger les données
+penguins <- read.csv("data/dataTP/penguins.csv", header=TRUE)
+
+# Créer le graphique
+g <- graph_from_data_frame(penguins, directed=TRUE)
+
+# Mettre en forme les noeuds et les arêtes
+V(g)$size <- 5
+V(g)$color <- "#0072B2"
+V(g)$label.cex <- 1.2
+V(g)$label.color <- "#333333"
+V(g)$label.family <- "sans"
+E(g)$arrow.size <- 0.3
+E(g)$color <- "#888888"
+
+# Tracer le graphique
+plot(g, layout=layout_with_fr, vertex.label=V(g)$id)
+```
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+# Afficher les données penguins et leurs hierarchies à l'aide de la fonction plot de igraph de manière à identifier les variables qui permettent de séparer les espèces de pingouins
+plot(penguins, layout=layout_with_fr, vertex.label=V(g)$id)
+```

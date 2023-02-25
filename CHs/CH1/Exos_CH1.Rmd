@@ -1,0 +1,590 @@
+---
+title: "Introduction au DataViz Grammaire des Graphiques"
+subtitle: " CH1"
+author: KHERIJI Walid
+output: 
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# `ggplot2`
+
+`ggplot2` est une implémentation de la ["grammaire des graphiques"](https://en.wikipedia.org/wiki/Ggplot2),
+et permet de tracer des figures scientifiques précises et informatives de manière aisée dans dans `R`.
+
+De nombreuses ressources sont disponibles en ligne. Voir par exemple
+[la documentation officielle](https://ggplot2.tidyverse.org/index.html),
+ainsi que la [fiche synthétique](https://github.com/rstudio/cheatsheets/blob/master/data-visualization-2.1.pdf).
+
+
+**Installation**
+
+* * *
+
+Pour utiliser `ggplot2`, il suffit d'installer la librairie associée,
+en tapant la commande suivante dans la console:
+
+```{r install-ggplot2, eval = FALSE}
+install.packages("ggplot2")
+```
+
+Il faut ensuite charger la librairie avec la commande:
+
+```{r load-ggplot2}
+library(ggplot2)
+#library(tidyverse)
+#library(gapminder)
+```
+
+> L'ensemble de données sur la fleur d'iris décrit les caractéristiques biologiques particulières de divers types de fleurs d'iris, en particulier la longueur et la largeur des pédales et des sépales, qui font partie du système reproducteur de la fleur. L'ensemble de données se compose de 50 échantillons de chacune des trois espèces d'Iris. 
+
+![iris](iris.png)
+
+<ol>
+
+<li>  Tout d’abord, commencer à charger la librairie ggplot2 dans votre environnement.
+
+
+```{r}
+# load library
+library(ggplot2)
+```
+</li>
+
+**Data**
+
+* * *
+<li> La base de données iris est chargée par défaut dans R. Utiliser la fonction head pour Afficher le début du tableau pour visualiser ses composants
+
+```{r}
+head(iris)
+```
+</li>
+
+
+**Initialisation**
+
+* * *
+
+<li> Initialiser le graphique `ggplot2` à l'aide de la fonction `ggplot()` et enregistrer le resultat dans un objet appelé `FirstGraph`
+
+```{r}
+firstgraph <- ggplot()
+```
+
+> Je ne vois rien ! Pourtant l’objet MonPremierGraphique existe et il contient plein de choses.
+
+</li>
+
+<li> Utiliser les fonctions `summary`, `typeof`, `names`, `class`, `head`, pour afficher les différentes caractéristiques de votre graphique .
+
+```{r}
+#summary(FirstGraph)
+#typeof(FirstGraph)
+#names(FirstGraph)
+#class(FirstGraph)
+#head(FirstGraph$data)
+```
+</li>
+
+<li> Utiliser le composant layers de l’objet `FirstGraph` pour afficher le nombre de couches 
+
+```{r}
+#FirstGraph$layers
+```
+
+</li>
+
+> OK, donc c’est normal si je ne vois rien, car le composant layers de l’objet FirstGraph ne contient rien.
+
+<li> Utiliser `aes` lier les deux ariables  `Sepal.length` et`Sepal.width`  à une représentation graphique et enregistrer le tout dans  `FirstGraph`
+
+```{r}
+firstgraph <- ggplot(data = iris, 
+              aes(x = Sepal.Length, y = Sepal.Width))
+firstgraph
+```
+</li>
+
+> C’est mieux, je vois des axes avec les variables que je veux représenter en x et y, mais rien de plus.
+
+
+**Nuage de points**
+
+* * *
+
+<li> Construiser le nuage de points représentant la `Sepal.width` en fonction de la `Sepal.length` à l’aide de geom_point() et enregistrer le tout dans  `FirstGraph`
+
+```{r}
+firstgraph <- firstgraph + geom_point()
+firstgraph
+```
+</li> 
+
+> Voilà, mon premier graphique réalisé avec ggplot2
+
+Utiliser le composant layers de l’objet `FirstGraph` pour afficher le nombre de couches 
+
+```{r}
+#FirstGraph$layers
+```
+
+
+<blockquote> *Bilan*
+
+Pour faire un graphique :
+
+* les données sont stockées dans un data.frame et pas autrement, ce n’est pas négociable !
+
+* les aesthetics mappings lient des variables du jeu de données à des propriétés visuelles (utiliser la fonction `aes()`).
+
+* seul l'ajout d’un layer permet de visualiser quelque chose (utiliser les fonctions `geom_*()`).
+
+* Ce qui donne une syntaxe comme celle-ci : `ggplot(iris, aes(x=Sepal.Length, y=Sepal.Width)) + geom_point()`
+</blockquote>
+
+
+
+<li>  Donner une couleur aux points respective à l’espèce représentée et enregistrer le tout dans  `FirstGraphColor`
+
+```{r}
+firstgraphcolor <- firstgraph + geom_point(aes(color = Species))
+firstgraphcolor
+```
+</li>
+
+> En fait, les couleurs c’est bien, mais si mes lecteurs les distinguent mal, je préfère changer la forme (shape) plutôt que la couleur.
+
+<li> Donner une forme  (`shape`) aux points respective à l’espèce représentée et enregistrer le tout dans  `FirstGraphForme`
+
+```{r}
+firstgraphforme <- firstgraph + geom_point(aes(shape = Species))
+firstgraphforme
+```
+</li>
+
+> Pas très lisible. Et si je combinais les deux…
+
+<li> Donner une couleur et une forme  (`shape`) aux points respective à l’espèce représentée et enregistrer le tout dans  `PointCouleurForme`
+
+```{r}
+pointcouleurforme <- firstgraph + geom_point(aes(color = Species, shape = Species))
+pointcouleurforme
+```
+</li>
+
+<li> Donner une couleur aux points en fonction de la varibale `Petal.Lengthet` un size en fonction de la variable `Petal.Width`.
+
+```{r}
+pointcouleurforme <- firstgraph + geom_point(aes(color = Petal.Length, size = Petal.Width))
+#pointcouleurforme
+```
+</li>
+
+<blockquote>
+* je suis toujours dans un nuage de points (`geom_point()`) avec `Sepal.Length` en abscisses (`aes(x= )`) et `Sepal.Width` en ordonnées (`aes(y= )`).
+
+* dans la fonction `aes()`, j’ai lié la couleur à la variable `Petal.Length` obtenant ansi une dégradé de bleu (plus la valeur de `Petal.Length` est élevée, plus le symbole est clair).
+
+* toujours dans la fonction `aes()`, j’ai lié la taille à la variable `Petal.Width` obtenant ansi des points d’autant plus grands que la valeur de `Petal.Width` est élevée.
+</blockquote>
+
+<li> À l’aide d’une couche de type facet_wrap, afficher dans un même graphe les nuage de points, toujours en fonction de l'espèce 
+
+```{r} 
+facetgraph <- firstgraph + geom_point() + facet_wrap(~Species)
+facetgraph
+```
+</li>
+
+<li> Combiner les deux graphiques ci-dessus 
+
+```{r}
+graphcomb = firstgraph + geom_point(aes(color = Petal.Length, size = Petal.Width)) + facet_wrap(~Species)
+#graphcomb
+```
+</li>
+
+** diagrammes en bâtons**
+
+* * *
+
+<li>  Utiliser `geom_bar()` et la data.frame iris avec seulement la variable `Species` en `x` pour réaliser un diagrammes en bâton 
+
+```{r}
+barplot <- ggplot(data = iris, aes(x = Species)) + geom_bar()
+barplot
+```
+</li>
+
+<li>  Utiliser `coord_polar()` pour visualiser le diagramme ci-dessus dans un repère de coordonnées polaires
+
+```{r}
+barplot <- ggplot(data = iris, aes(x = Species)) + geom_bar() + coord_polar()
+barplot
+```
+
+</li>
+
+<li>  Utiliser le paramètre `width` dans `geom_bar()`  et le paramètre `fill` dans `aes()` pour rajouter une couleur au diagramme respective à l’espèce représentée. 
+
+```{r}
+barplot <- ggplot(data = iris, aes(x = Species, fill = Species)) + geom_bar(width = 0.5)
+barplot
+```
+
+</li>
+
+
+
+**Histogrammes**
+
+* * *
+
+<li> Utiliser la data.frame iris avec cette fois-ci seulement la variable `Sepal.Width` en `x` pour réaliser un histogramme et enregistrer l'objet dans  `HistSepalW`
+
+
+```{r}
+histsepalw <- ggplot(data = iris, aes(x = Sepal.Width)) + geom_histogram()
+histsepalw
+```
+</li>
+
+> pas génial, mais on a bien un histogramme. Histogramme sur lequel, on peut appliquer les recettes précédentes pour l'améliorer 
+
+<li> Utiliser le `facetting` pour avoir un histogramme par modalité du facteur `Species`
+
+```{r}
+histsepalw <- ggplot(data = iris, aes(x = Sepal.Width)) + geom_histogram() + facet_wrap(~Species)
+histsepalw
+```
+</li>
+
+<li> Utiliser `HistSepalW` et `colour` dans `aes` pour rajouter une couleur aux histogrammes respective à l’espèce représentée.
+
+```{r}
+histsepalw <- ggplot(data = iris, aes(x = Sepal.Width, colour = Species)) + geom_histogram() + facet_wrap(~Species)
+histsepalw
+```
+
+</li>
+
+<li> Utiliser `HistSepalW` et `fill` dans `aes` pour rajouter une couleur aux histogrammes respective à l’espèce représentée. 
+
+```{r}
+histsepalw <- ggplot(data = iris, aes(x = Sepal.Width, fill = Species)) + geom_histogram() + facet_wrap(~Species)
+histsepalw
+```
+
+</li>
+
+<li> Augmenter la largeur des intervalles (`binwidth = 0.2`) dans `geom_histogram`histogramme ci-dessus  
+
+```{r}
+histsepalw <- ggplot(data = iris, aes(x = Sepal.Width, fill = Species)) + geom_histogram(binwidth = 0.2) + facet_wrap(~Species)
+histsepalw
+```
+
+```{r}
+histsepalw <- ggplot(data = iris, aes(x = Sepal.Width, fill = Species)) + geom_histogram() + facet_wrap(~Species)
+histsepalw
+```
+
+</li>
+
+>  Un histogramme n’est rien d’autre qu’un diagramme en bâtons prenant comme données le nombre de valeurs dans chaque bin.
+
+<li> Utiliser  `geom_point` et `stat = "bin"` pour visualiser un nuage de points correspondant au nombre de valeurs dans chaque bin. 
+
+```{r}
+histsepalw <- ggplot(data = iris, aes(x = Sepal.Width, fill = Species)) + geom_point(stat = "bin") + facet_wrap(~Species)
+histsepalw
+```
+
+</li>
+
+
+<li> Utiliser l'objet ci-dessus et remplacer `geom_point` par  `geom_line` 
+
+```{r}
+histsepalw <- ggplot(data = iris, aes(x = Sepal.Width, fill = Species)) + geom_line(stat = "bin") + facet_wrap(~Species)
+histsepalw
+```
+
+</li>
+
+
+
+**Densité**
+
+* * *
+
+
+<li> Utiliser `geom_density()` et le data.frame iris avec seulement la variable `Sepal.Width` en `x` pour visualiser la répartition du poids de la variable `Sepal.Width` 
+
+```{r}
+denssepalw <- ggplot(data = iris, aes(x = Sepal.Width)) + geom_density()
+denssepalw
+```
+
+</li>
+
+<li> 
+utiliser coulour pour visualiser la répartition du poids de la variable `Sepal.Width` par modalité avec une couleur par modalité de `Species`
+
+```{r}
+denssepalw <- ggplot(data = iris, aes(x = Sepal.Width, colour = Species)) + geom_density()
+denssepalw
+```
+
+</li>
+
+
+<li> Utiliser l'objet ci-dessus et remplacer `coulour` par `fill`
+
+```{r}
+denssepalw <- ggplot(data = iris, aes(x = Sepal.Width, fill = Species)) + geom_density()
+denssepalw
+```
+
+</li>
+
+> Que les courbes ne se cachent les unes derrière les autres par exemple ? 
+
+<li> Ajouter de la transparence avec le paramètre `alpha` dans `geom_density` 
+
+```{r}
+denssepalw <- ggplot(data = iris, aes(x = Sepal.Width, fill = Species)) + geom_density(alpha = 0.5)
+denssepalw
+```
+
+</li>
+
+
+
+**Boxplot**
+
+* * *
+
+
+<li> Initialiser un graphique `ggplot2` à l'aide de la fonction `ggplot()` et enregistrer le  dans un objet appelé `GraphBox`. Utiliser `GraphBox` et à l’aide de geom_boxplot(), construiser le boxplot de la répartition du `Petal.Width` dans toutes les donnees `iris`
+
+```{r}
+GraphBox <- ggplot(data = iris, aes(x = Petal.Width)) + geom_boxplot()
+GraphBox
+```
+
+</li>
+
+
+<li> Utiliser `GraphBox` et visualiser dees boxplots de la répartition du `Petal.Width` par modalité de `Species`. Pour cela, il suffit de préciser que l’axe des x du graphique est lié à la variable `Species`
+
+```{r}
+GraphBox <- ggplot(data = iris, aes(x = Species, y = Petal.Width)) + geom_boxplot()
+GraphBox
+```
+
+</li>
+
+
+<li> Utiliser l'objet ci-dessus et `coord_flip()` pour changer les coordonnées  et visualiser des boxplots à l’horizontale
+
+```{r}
+GraphBox <- ggplot(data = iris, aes(x = Species, y = Petal.Width)) + geom_boxplot() + coord_flip()
+GraphBox
+```
+
+</li>
+
+
+<li> Utiliser `geom_point` pour ajouter un layer au graphique des boxplots et visualiser les points 
+
+```{r}
+GraphBox <- ggplot(data = iris, aes(x = Species, y = Petal.Width)) + geom_boxplot() + geom_point() + coord_flip()
+GraphBox
+```
+
+</li>
+
+> On peut pas faire mieux pour éviter la superposition des points
+
+<li> Utiliser l'objet ci-dessus et ajouter de la transparence avec le paramètre `alpha`  et disperser les points avec `position` dans `geom_point`
+
+```{r}
+GraphBox <- ggplot(data = iris, aes(x = Species, y = Petal.Width)) + geom_boxplot() + geom_point(alpha = 0.5, position = "jitter") + coord_flip()
+GraphBox
+```
+
+</li>
+
+<li> Factoriser `(aes(x = Species, y=Petal.Width))` et régénérer l'objet ci-dessus
+
+```{r}
+GraphBox <- ggplot(data = iris, aes(x = Species, y = Petal.Width)) + geom_boxplot() + geom_point(alpha = 0.5, position = "jitter") + coord_flip()
+GraphBox
+```
+
+</li>
+
+<li> Remplacer `geom_boxplot` par `geom_violin` 
+
+```{r}
+GraphBox <- ggplot(data = iris, aes(x = Species, y = Petal.Width)) + geom_violin() + geom_point(alpha = 0.5, position = "jitter") + coord_flip()
+GraphBox
+```
+
+</li>
+
+
+<li> Régénérer l'objet ci-dessus avec de `violons` et des `points` en couleur 
+
+```{r}
+GraphBox <- ggplot(data = iris, aes(x = Species, y = Petal.Width)) + geom_violin() + geom_point(alpha = 0.5, position = "jitter", colour = "red") + coord_flip()
+GraphBox
+```
+
+</li>
+
+
+
+**Les nuages de points : le retour**
+
+* * *
+
+<li> Initialiser un graphique `ggplot2` et Construiser le nuage de points représentant la `Sepal.length` en fonction de la ` Sepal.width` à l’aide de geom_point() et enregistrer le  dans   `SecondGraph`
+
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point()
+SecondGraph
+```
+
+
+</li>
+
+<li> Utiliser l'objet et ajouter `geom_smooth()`
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth()
+SecondGraph
+```
+
+</li>
+
+
+<li> Régénérer et visualiser le grpahique ci-dessus avec le paramètre `span = 0.3 et 1.5` dans `geom_smoth() `
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(span = 0.3)
+```
+
+```{r}
+SecondGraph
+```
+
+</li>
+
+
+<li> Dans `geom_smooth`, utiliser le paramètre `method` pour visualiser une régression linéaire (`"lm"`)
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm")
+SecondGraph
+```
+
+</li>
+
+<li> Utiliser `geom_smooth()` et  `facet_wrap` pour afficher dans un même graphe les nuage de points et la droite de regression en fonction de l'espèce
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~Species)
+SecondGraph
+```
+
+</li>
+
+
+<li> Ajouter une couleur  respective à l’espèce représentée et régénérer et visualiser le grpahique ci-dessus 
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~Species) + scale_colour_brewer(palette = "Set2")
+SecondGraph
+```
+
+</li>
+
+
+<li> Ajouter sucessivement les trois themes `theme_bw()`, `theme_dark(`) et `theme_light()` régénérer et visualiser le grpahique ci-dessus pour chaque theme 
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~Species) + scale_colour_brewer(palette = "Set2") + theme_bw()
+SecondGraph
+```
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~Species) + scale_colour_brewer(palette = "Set2") + theme_dark()
+SecondGraph
+```
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~Species) + scale_colour_brewer(palette = "Set2") + theme_light()
+SecondGraph
+```
+
+</li>
+
+
+<li> Utiliser `SecondGraph` et donner une couleur aux points respective à l’espèce représentée et enregistrer le tout dans `GraphCouleur` 
+
+```{r}
+GraphCouleur <- SecondGraph + scale_colour_brewer(palette = "Set2")
+GraphCouleur
+```
+
+</li> Utiliser `SecondGraph`  et la fonction scale_colour_brewer() avec les deux  `palette="Set2" et  "sect3"`
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~Species) + scale_colour_brewer(palette = "Set2") + theme_light()
+SecondGraph
+```
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~Species) + scale_colour_brewer(palette = "Set3") + theme_light()
+SecondGraph
+```
+
+</li>  
+
+
+<li>  Utiliser `SecondGraph`  et ajouter `scale_colour_manual(values = c("rosybrown","tomato","midnightblue"))` 
+
+```{r}
+SecondGraph <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + geom_point() + geom_smooth(method = "lm") + facet_wrap(~Species) + scale_colour_manual(values = c("rosybrown","tomato","midnightblue")) + theme_light()
+SecondGraph
+```
+
+</li>
+
+
+<li>  Utiliser `GraphCouleur`  et ajouter un titre à l'aide de la fonction `ggtitle`. Utiliser les paramètres suivants pour le theme   `theme(legend.position = "bottom",
+        legend.title = element_text(face="bold"),
+        axis.title.x = element_text(face="italic"),
+        plot.title = element_text(colour = "purple",size = rel(1.5)))`
+
+```{r}
+GraphCouleur <- GraphCouleur + ggtitle("Nuage de points et droite de regression en fonction de l'espèce") + theme(legend.position = "bottom",
+        legend.title = element_text(face="bold"),
+        axis.title.x = element_text(face="italic"),
+        plot.title = element_text(colour = "purple",size = rel(1.5)))
+GraphCouleur
+```
+
+</li>
+
+
+</ol>

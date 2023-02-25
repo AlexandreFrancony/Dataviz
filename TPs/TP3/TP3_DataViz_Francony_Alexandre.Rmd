@@ -1,0 +1,172 @@
+---
+title: "TP3 : Visualisation des donnees spatiales"
+subtitle: ""
+author: Nom Prenom
+output: 
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+
+```{r setup, warning = FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+> Charger les librairies  `leaflet`, `sf`, `mapsf` et `dplyr`
+
+```{r warning = FALSE, message=FALSE}
+library(leaflet) # Cartographie interactive 
+library(sf) # Gestion de donnees spatiales + geotraitement
+library(mapsf) # Cartographie
+library(dplyr) # Gestion de donnees 
+```
+
+## Question 1
+
+* Charger les donnees spatiales du decoupage administratif de l'ile de france au niveau `communal` et `departemental` et les stocker dans  `if_com_geom` et `if_dep_geom`. 
+* Charger les resultats du recensement de la population de l'ile de france aux niveaux `communal` et `departemental` et les stocker dans  `pop_if_com` et `pop_if_dep`.
+
+```{r}
+
+# Chargement des donnees spatiales du decoupage administratif de l'ile de france au niveau `communal` et `departemental` et les stocker dans  `if_com_geom` et `if_dep_geom`.
+if_com_geom = st_read("data/dataset_tp3/if_com_geom.shp")
+if_dep_geom = st_read("data/dataset_tp3/if_dep_geom.shp")
+pop_if_com = read.csv("data/dataset_tp3/pop_if_com.csv")
+pop_if_dep = read.csv("data/dataset_tp3/pop_if_dep.csv")
+```
+
+> Les resultats du recensement de la population contiennent la population totale de l'ile de france aux niveaux `communal` et `departemental` et le nombre de personnes par tranche d'age  : 
+>
+ * P19_POP : population
+ * P19_POP0014 : nombre de personnes de 0 a 14 ans
+ * P19_POP1529 : nombre de personnes de 15 a 29 ans
+ * P19_POP3044 : nombre de personnes de 30 a 44 ans
+ * P19_POP4559 : nombre de personnes de 45 a 59 ans
+ * P19_POP75P : nombre de personnes de 60 ans ou plus
+ 
+## Question 2
+
+* Utiliser la fonction `as.character` pour transformer `pop_if_dep$INSEE_DEP` et `pop_if_com$INSEE_COM` en type `character`.
+* Utiliser la fonction `inner_join` pour fusionner le decoupage et les resultats du recensement de la population en ile de france au niveau `departemental` et stocker le  resultat dans `pop_if_dep_geom`.
+* Utiliser la fonction `inner_join` pour fusionner le decoupage et les resultats du recensement de la population en ile de france au niveau `communal` et stocker le resultat dans `pop_if_com_geom`.
+
+```{r}
+pop_if_dep$INSEE_DEP <- as.character(pop_if_dep$INSEE_DEP)
+pop_if_com$INSEE_COM <- as.character(pop_if_com$INSEE_COM)
+
+pop_if_dep_geom <- inner_join(if_dep_geom, pop_if_dep, by = c("INSEE_DEP" = "INSEE_DEP"))
+pop_if_com_geom <- inner_join(if_com_geom, pop_if_com, by = c("INSEE_COM" = "INSEE_COM")) 
+```
+
+## Question 3
+
+* Utiliser la fonction `mf_map` de type `choro`  et `border = NA ` pour visualiser la population de l'ile de france par commune. 
+* Utiliser la fonction `mf_map` de type `base` et `border = "white"` pour visualiser et ajouter les contours des departements sur le meme graphique. 
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+mf_map(pop_if_com_geom, type = "choro", var = "P19_POP", border = NA)
+```
+```{r}
+mf_map(pop_if_com_geom, type = "choro", var = "P19_POP", border = NA)
+mf_map(pop_if_dep_geom, type = "base",  border = "white", add = TRUE)
+```
+
+> Decommenter et utiliser les codes suivants pour creer une nouvelle colonne `P19_MAX_TRANCHE` qui contient la tranche d'age dominante en ile de france aux niveaux `communal` et `departemental`. 
+
+```{r}
+maxcol <- max.col(pop_if_dep_geom[7:11] %>% as_tibble()%>% dplyr::select(-geometry), ties.method = "first")+6
+pop_if_dep_geom <-  pop_if_dep_geom%>%mutate(P19_MAX_TRANCHE = colnames(pop_if_dep_geom)[maxcol])
+```
+
+```{r}
+maxcol <- max.col(pop_if_com_geom[15:19] %>% as_tibble()%>% dplyr::select(-geometry), ties.method = "first")+14
+pop_if_com_geom <-  pop_if_com_geom%>%mutate(P19_MAX_TRANCHE = colnames(pop_if_com_geom)[maxcol])
+```
+
+## Question 4
+
+* Utiliser la fonction  `mf_map` de type `typo` et `border = "white"` pour visualiser la tranche d'age dominante par departement. 
+* Utiliser la fonction `mf_label` pour afficher et ajouter les noms des departements sur la meme visualisation. 
+* Utiliser la fonction `mf_layout` pour ajouter un titre, un auteur (vous) et une source (INSEE & IGN, 2022) a votre visualisation 
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+mf_map(pop_if_dep_geom, type = "typo", var = "P19_MAX_TRANCHE", border = "white")
+mf_label(pop_if_dep_geom, var = "INSEE_DEP", add = TRUE)
+mf_layout(title = "Tranche d'age dominante par departement en ile de france")
+```
+
+## Question 5
+
+Utiliser les fonctions `leaflet` et `addPolygons` pour visualiser la tranche d'age dominante par departement sur une carte interactive
+
+
+```{r}
+#domain_range <- range(pop_if_dep_geom$P19_MAX_TRANCHE)
+#leaflet(pop_if_dep_geom) %>%
+#  addPolygons(fillColor = ~colorNumeric(palette = "Set1", domain = domain_range)(P19_MAX_TRANCHE),
+#              color = "black", weight = 1, opacity = 1, fillOpacity = 0.7, smoothFactor = 1) %>%
+#  addProviderTiles(providers$CartoDB.Positron) %>%
+#  addLegend("bottomright",
+#            pal = colorNumeric(palette = "Set1", domain = domain_range),
+#            values = ~P19_MAX_TRANCHE,
+#            title = "Tranche d'age dominante",
+#            opacity = 1)
+```
+
+
+## Question 6
+
+* Utiliser la fonction `mf_map` de type `typo` et `border = "white"` pour visualiser la tranche d'age dominante par commune. * Utiliser la fonction `mf_map` de type `base` et `border = "black"` pour visualiser et ajouter les contours des departements sur la meme visualisation. 
+* Utiliser la fonction `mf_layout` pour ajouter un titre, un auteur (vous) et une source (INSEE & IGN, 2022) a votre visualisation 
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+mf_map(pop_if_com_geom, type = "typo", var = "P19_MAX_TRANCHE", border = "white")
+mf_map(pop_if_dep_geom, type = "base",  border = "black", add = TRUE)
+mf_layout(title = "Tranche d'age dominante par commune en ile de france")
+```
+
+## Question 7
+
+Utiliser les fonctions `leaflet` et `addPolygons` pour visualiser la tranche d'age dominante par commune sur une carte interactive
+
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+#domain_range <- range(pop_if_com_geom$P19_MAX_TRANCHE)
+#leaflet(pop_if_com_geom) %>%
+#  addPolygons(fillColor = ~colorNumeric(palette = "Set1", domain = domain_range)(P19_MAX_TRANCHE),
+#              color = "black", weight = 1, opacity = 1, fillOpacity = 0.7, smoothFactor = 1) %>%
+#  addProviderTiles(providers$CartoDB.Positron) %>%
+#  addLegend("bottomright",
+#            pal = colorNumeric(palette = "Set1", domain = domain_range),
+#            values = ~P19_MAX_TRANCHE,
+#            title = "Tranche d'age dominante",
+#            opacity = 1)
+```
+
+
+
+> Decommenter et utiliser les codes suivants pour creer une nouvelle colonne `P19_NB_MAX_TRANCHE` qui contient le nombre de personnes de la tranche d'age dominante par commune. 
+
+```{r }
+
+pop_if_com_geom_mp <- pop_if_com_geom %>% 
+                      rowwise %>%
+                      mutate(P19_NB_MAX_TRANCHE = cur_data()[[P19_MAX_TRANCHE]]) %>% 
+                      ungroup
+```
+
+
+## Question 8 
+
+* Utiliser la fonction `mf_map` de type `prop_typo` pour visualiser la tranche d'age dominante et son nombre de personnes par commune. 
+* Utiliser la fonction `mf_map` de type `base` et `border = "white"` pour visualiser et ajouter les contours des communes sur la meme visualisation.
+* Utiliser la fonction `mf_map` de type `base` et `border = "black"` pour visualiser et ajouter les contours des departements sur la meme visualisation. 
+* Utiliser la fonction `mf_layout` pour ajouter un titre, un auteur (vous) et une source (INSEE & IGN, 2022) a votre visualisation 
+
+```{r fig.align="center",fig.width = 15, fig.height = 10}
+#mf_map(pop_if_com_geom_mp, type = "prop_typo", var = "P19_MAX_TRANCHE", prop = "P19_NB_MAX_TRANCHE", border = "white")
+#mf_map(pop_if_com_geom, type = "base",  border = "white", add = TRUE)
+#mf_map(pop_if_dep_geom, type = "base",  border = "black", add = TRUE)
+#mf_layout(title = "Tranche d'age dominante et son nombre de personnes par commune en ile de france")
+```
